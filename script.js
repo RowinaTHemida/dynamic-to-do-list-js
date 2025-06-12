@@ -3,7 +3,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const taskInput = document.getElementById('task-input');
     const taskList = document.getElementById('task-list');
 
-    function addTask(taskText = null) {
+    // Load tasks from Local Storage on page load
+    loadTasks();
+
+    function loadTasks() {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        storedTasks.forEach(taskText => addTask(taskText, false)); // false → do not re-save to avoid duplication
+    }
+
+    function addTask(taskText = null, save = true) {
         let text = taskText;
         if (!text) {
             text = taskInput.value.trim();
@@ -15,23 +23,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const li = document.createElement('li');
-        li.textContent = text;
+
+        const span = document.createElement('span');
+        span.textContent = text;
 
         const removeButton = document.createElement('button');
         removeButton.textContent = "Remove";
         removeButton.className = 'remove-btn';
         removeButton.onclick = function() {
             li.remove();
+            removeTask(text);
         };
 
+        li.appendChild(span);
         li.appendChild(removeButton);
         taskList.appendChild(li);
 
         taskInput.value = '';
+
+        if (save) {
+            const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            storedTasks.push(text);
+            localStorage.setItem('tasks', JSON.stringify(storedTasks));
+        }
     }
 
+    function removeTask(taskText) {
+        const storedTasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        const updatedTasks = storedTasks.filter(task => task !== taskText);
+        localStorage.setItem('tasks', JSON.stringify(updatedTasks));
+    }
+
+    // Event listener for Add button
     addButton.addEventListener('click', () => addTask());
 
+    // Event listener for Enter key
     taskInput.addEventListener('keypress', (event) => {
         if (event.key === 'Enter') {
             addTask();
